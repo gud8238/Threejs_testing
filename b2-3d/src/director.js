@@ -87,13 +87,14 @@ export function createDirector({ tl, timing, terrain, sky, grandma, tiger, camer
     } else if (shot.id === "S4") { // orbit two-shot from the uphill side: tiger left, grandma right
       const center = gWorld.clone().lerp(tWorld, 0.5).add(V(0, 0.55, 0));
       const r = rootFrame((gWorld.z + tWorld.z) / 2, 0, heightAt, trailOffset);
-      const ang = THREE.MathUtils.degToRad(80 - 35 * p), R = 3.5 - 1.0 * p;
+      const gap = gWorld.distanceTo(tWorld);
+      const ang = THREE.MathUtils.degToRad(80 - 35 * p), R = 1.1 + 0.95 * gap;
       // rotate the "uphill side" vector (+l) toward the travel direction by `ang`
       const sideX = r.l[0], sideZ = r.l[1], fx_ = r.f[0], fz_ = r.f[1];
       // l points to the valley side (+x); the uphill side is -l
       const dx = -sideX * Math.sin(ang) + fx_ * Math.cos(ang), dz = -sideZ * Math.sin(ang) + fz_ * Math.cos(ang);
       pos.set(center.x + dx * R, 0, center.z + dz * R);
-      pos.y = Math.max(center.y + 0.45, heightAt(pos.x, pos.z) + 1.0);
+      pos.y = Math.max(center.y + 0.4, heightAt(pos.x, pos.z) + 0.75);
       look.copy(center).add(V(0, -0.1, 0));
       fov = 40;
       pos.add(shake(t, 0.012));

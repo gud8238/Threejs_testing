@@ -156,9 +156,11 @@ export function createFlora(scene, terrain) {
   rocks.push([1.6, 7.2, 0.9], [-1.7, 4.5, 0.75], [-1.3, -1.5, 0.6]); // hero rocks near camera paths
   // keep the S3 camera's line of sight clear (camera sits low beside the trail at z = -3.1)
   const camX = terrain.pathXAt(-3.1) - 1.45;
+  // ...and the S4 orbit camera's corridor on the uphill side of the trail
+  const inS4Corridor = (x, z) => z > -3.8 && z < 3.8 && x - terrain.pathXAt(z) < -0.8 && x - terrain.pathXAt(z) > -4.2;
   for (let i = rocks.length - 1; i >= 0; i--) {
     const [x, z] = rocks[i];
-    if (z < -2.4 && z > -9 && Math.abs(x - camX) < 1.6) rocks.splice(i, 1);
+    if ((z < -2.4 && z > -9 && Math.abs(x - camX) < 1.6) || inS4Corridor(x, z)) rocks.splice(i, 1);
   }
   const rockGeos = [rockGeo(1), rockGeo(2), rockGeo(3)];
   rockGeos.forEach((g, gi) => {
@@ -184,6 +186,7 @@ export function createFlora(scene, terrain) {
   let li = 0, bi = 0;
   for (const [dx, z, r] of bushes) {
     const x = terrain.pathXAt(z) + dx, y0 = terrain.heightAt(x, z);
+    if (inS4Corridor(x, z) && z > -3.5) continue; // keep the S3 foreground bush (z = -4.4)
     for (let j = 0; j < 120; j++) {
       const a = rnd() * 6.28, h = rnd(), rr = r * Math.sqrt(1 - h * h) * (0.6 + rnd() * 0.4);
       tpos.set(x + Math.cos(a) * rr, y0 + h * r * 1.1, z + Math.sin(a) * rr);
@@ -198,6 +201,8 @@ export function createFlora(scene, terrain) {
       berry.setMatrixAt(bi++, m.compose(tpos, q.identity(), s));
     }
   }
+  bLeaf.count = li; // skipped bushes leave unused slots: draw only what was placed
+  berry.count = bi;
   bLeaf.castShadow = true;
   group.add(bLeaf, berry);
 
