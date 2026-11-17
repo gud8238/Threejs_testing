@@ -102,6 +102,16 @@ def build_background():
     print("occluder ratio", (np.asarray(a) > 20).mean())
 
 
+def export_depth_rg(size=(512, 288)):
+    """Browser-friendly depth: 16-bit value split into R (high) and G (low) bytes."""
+    d = np.asarray(Image.open(BG / "depth.png"), np.float32) / 65535.0
+    d = np.asarray(Image.fromarray(d, mode="F").resize(size, Image.BOX))
+    v = np.clip(d * 65535, 0, 65535).astype(np.uint16)
+    rg = np.dstack([(v >> 8).astype(np.uint8), (v & 255).astype(np.uint8), np.zeros_like(v, np.uint8)])
+    Image.fromarray(rg).save(BG / "depth_rg.png")
+
+
 if __name__ == "__main__":
     cut_poses(new_session("isnet-general-use"))
     build_background()
+    export_depth_rg()
