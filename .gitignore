@@ -6,3 +6,5 @@ renders/preview*
 *.tmp
 __pycache__/
 .superpowers/
+renders/.*hf-transaction*/
+renders/work-*/
