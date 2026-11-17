@@ -5,6 +5,8 @@ import { createBackground, makeDepthSampler } from "./background.js";
 import { createAtmosphere } from "./atmosphere.js";
 import { createCharacter } from "./character.js";
 import { makeRigs } from "./rigs.js";
+import { createCameraRig } from "./camera.js";
+import { createPost } from "./post.js";
 import meta from "../assets/chars/meta.json" with { type: "json" };
 
 const GRANDMA_POSES = ["g_2", "g_3", "g_4", "g_5"];
@@ -46,30 +48,34 @@ async function build() {
 
   const texList = await Promise.all([...GRANDMA_POSES, ...TIGER_POSES].map((id) => loadTex(`assets/chars/${id}.png`)));
   const textures = Object.fromEntries([...GRANDMA_POSES, ...TIGER_POSES].map((id, i) => [id, texList[i]]));
-  // scale: grandma's running pose spans 420 reference px when standing at row 600 of the painting
-  const gk = (420 * bg.pxWorldAtGround(600)) / meta.g_2.h;
+  // scale: grandma's running pose spans 340 reference px when standing at row 600 of the painting
+  const gk = (340 * bg.pxWorldAtGround(600)) / meta.g_2.h;
   const grandma = createCharacter(scene, { textures, meta, worldPerPx: gk, bg, order: 12 });
   const tiger = createCharacter(scene, { textures, meta, worldPerPx: gk * 1.2, bg, order: 10 });
   const rigs = makeRigs(timing);
   const pounceTarget = new THREE.Vector3();
 
-  // camera state driven by the GSAP timeline (Task 6 replaces this with per-shot keys)
-  const cam = { x: 0, y: 0, z: 0, fov: 40 };
   const tl = gsap.timeline({ paused: true });
-  tl.fromTo(cam, { z: 0, x: 0 }, { z: -0.3, x: 0.1, duration: timing.duration, ease: "none" }, 0);
+  const camRig = createCameraRig(tl, timing);
+  // post fx state on the same timeline: the freeze is a 0 ms hit, then the fade to black
+  const fx = { sat: 1, vig: 0.3, fade: 0, flash: 0 };
+  tl.set(fx, { sat: 0.35, vig: 0.75, flash: 0.45 }, timing.freeze);
+  tl.to(fx, { flash: 0, duration: 0.08, ease: "power1.out" }, timing.freeze);
+  tl.fromTo(fx, { fade: 0 }, { fade: 1, duration: timing.duration - timing.black - 0.1, ease: "none", immediateRender: false }, timing.black);
+  tl.set({}, {}, timing.duration);
+  const post = createPost(renderer, W, H);
+  const vars = window.__hyperframes?.getVariables?.() ?? {};
+  const grainOn = vars.grain !== false;
 
   function renderAt(t) {
     tl.seek(t, false);
-    camera.position.set(cam.x, cam.y, cam.z);
-    camera.fov = cam.fov;
-    camera.updateProjectionMatrix();
-    camera.lookAt(cam.x * 0.5, cam.y, cam.z - 10);
-    atmo.update(t);
-    camera.updateMatrixWorld();
+    camRig.apply(camera, bg, t);
+    const tt = Math.min(t, timing.freeze);
+    atmo.update(tt);
     pounceTarget.set(0, -0.55, -2.6).applyMatrix4(camera.matrixWorld);
     grandma.update(rigs.grandmaAt(t), pounceTarget);
     tiger.update(rigs.tigerAt(t), pounceTarget);
-    renderer.render(scene, camera);
+    post.render(scene, camera, fx, Math.round(Math.min(t, timing.freeze) * 30), grainOn);
   }
 
   await renderer.compileAsync(scene, camera);

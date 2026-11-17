@@ -48,3 +48,23 @@ def test_frame_is_a_rendered_scene():
 def test_camera_moves_over_time():
     a, z, _ = snap([4, 0, 4])
     assert np.abs(a - z).mean() > 8, "0s and 4s frames are nearly the same"
+
+
+def test_freeze_holds_still():
+    """After the freeze nothing moves: with grain off, 9.4 s and 9.6 s are identical."""
+    a, b = snap([9.4, 9.6])
+    assert np.array_equal(a, b), f"mean diff {np.abs(a - b).mean():.3f}"
+
+
+def test_freeze_is_desaturated():
+    a, = snap([9.5])
+    rgb = a.astype(float)
+    sat = (rgb.max(axis=2) - rgb.min(axis=2)).mean()
+    b, = snap([8.6])
+    sat_before = (b.max(axis=2) - b.min(axis=2)).astype(float).mean()
+    assert sat < sat_before * 0.6, f"{sat:.1f} vs {sat_before:.1f}"
+
+
+def test_ends_in_black():
+    a, = snap([9.95])
+    assert a.mean() < 0.05 * 255, f"mean {a.mean():.1f}"

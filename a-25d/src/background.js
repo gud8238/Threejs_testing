@@ -16,8 +16,11 @@ export function makeDepthSampler(img) {
     const i = (y * w + x) * 4;
     return (px[i] * 256 + px[i + 1]) / 65535;
   };
-  // u, v in [0,1], v = 0 at the TOP of the image
+  // u, v in [0,1] (mirrored outside), v = 0 at the TOP of the image
+  const mirror = (a) => (a < 0 ? -a : a > 1 ? 2 - a : a);
   return (u, v) => {
+    u = mirror(u);
+    v = mirror(v);
     const fx = Math.min(Math.max(u * (w - 1), 0), w - 1);
     const fy = Math.min(Math.max(v * (h - 1), 0), h - 1);
     const x0 = Math.floor(fx), y0 = Math.floor(fy);
@@ -57,12 +60,17 @@ export function createBackground(scene, { colorTex, occTex, depth, D = 20, fov =
   const groundAt = (x, y) => planePoint(x, y).multiplyScalar(scaleOf(groundDepth(y)));
   const pxWorldAtGround = (y) => (H / REF.H) * scaleOf(groundDepth(y));
 
+  // the mesh extends MARGIN beyond the painting on every side, mirrored, so camera moves never see an edge
+  const MARGIN = 0.15;
   const makeMesh = (tex, inset) => {
-    const geo = new THREE.PlaneGeometry(W, H, 320, 180);
+    tex.wrapS = tex.wrapT = THREE.MirroredRepeatWrapping;
+    const k = 1 + 2 * MARGIN;
+    const geo = new THREE.PlaneGeometry(W * k, H * k, 360, 200);
     const pos = geo.attributes.position;
     const uv = geo.attributes.uv;
     for (let i = 0; i < pos.count; i++) {
-      const u = uv.getX(i), v = 1 - uv.getY(i);
+      const u = -MARGIN + uv.getX(i) * k, v = 1 - (-MARGIN + uv.getY(i) * k);
+      uv.setXY(i, u, 1 - v);
       const s = scaleOf(depth(u, v)) * inset;
       pos.setXYZ(i, pos.getX(i) * s, pos.getY(i) * s, -D * s);
     }

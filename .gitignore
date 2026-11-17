@@ -2,7 +2,7 @@
 *.key
 node_modules/
 .hyperframes/
-renders/preview*/
+renders/preview*
 *.tmp
 __pycache__/
 .superpowers/
