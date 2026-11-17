@@ -3,6 +3,12 @@ import * as THREE from "three";
 import timing from "../assets/timing.json" with { type: "json" };
 import { createBackground, makeDepthSampler } from "./background.js";
 import { createAtmosphere } from "./atmosphere.js";
+import { createCharacter } from "./character.js";
+import { makeRigs } from "./rigs.js";
+import meta from "../assets/chars/meta.json" with { type: "json" };
+
+const GRANDMA_POSES = ["g_2", "g_3", "g_4", "g_5"];
+const TIGER_POSES = ["t_2", "t_3", "t_4", "t_5", "t_6"];
 
 const W = 1280, H = 720;
 
@@ -38,10 +44,19 @@ async function build() {
   const bg = createBackground(scene, { colorTex, occTex, depth: makeDepthSampler(depthImg) });
   const atmo = createAtmosphere(scene, bg);
 
+  const texList = await Promise.all([...GRANDMA_POSES, ...TIGER_POSES].map((id) => loadTex(`assets/chars/${id}.png`)));
+  const textures = Object.fromEntries([...GRANDMA_POSES, ...TIGER_POSES].map((id, i) => [id, texList[i]]));
+  // scale: grandma's running pose spans 420 reference px when standing at row 600 of the painting
+  const gk = (420 * bg.pxWorldAtGround(600)) / meta.g_2.h;
+  const grandma = createCharacter(scene, { textures, meta, worldPerPx: gk, bg, order: 12 });
+  const tiger = createCharacter(scene, { textures, meta, worldPerPx: gk * 1.2, bg, order: 10 });
+  const rigs = makeRigs(timing);
+  const pounceTarget = new THREE.Vector3();
+
   // camera state driven by the GSAP timeline (Task 6 replaces this with per-shot keys)
   const cam = { x: 0, y: 0, z: 0, fov: 40 };
   const tl = gsap.timeline({ paused: true });
-  tl.fromTo(cam, { z: 0, x: 0 }, { z: -1.2, x: 0.3, duration: timing.duration, ease: "none" }, 0);
+  tl.fromTo(cam, { z: 0, x: 0 }, { z: -0.3, x: 0.1, duration: timing.duration, ease: "none" }, 0);
 
   function renderAt(t) {
     tl.seek(t, false);
@@ -50,6 +65,10 @@ async function build() {
     camera.updateProjectionMatrix();
     camera.lookAt(cam.x * 0.5, cam.y, cam.z - 10);
     atmo.update(t);
+    camera.updateMatrixWorld();
+    pounceTarget.set(0, -0.55, -2.6).applyMatrix4(camera.matrixWorld);
+    grandma.update(rigs.grandmaAt(t), pounceTarget);
+    tiger.update(rigs.tigerAt(t), pounceTarget);
     renderer.render(scene, camera);
   }
 

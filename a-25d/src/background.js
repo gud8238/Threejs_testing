@@ -29,7 +29,7 @@ export function makeDepthSampler(img) {
   };
 }
 
-export function createBackground(scene, { colorTex, occTex, depth, D = 20, fov = 44, A = 2.0, gamma = 1.3 }) {
+export function createBackground(scene, { colorTex, occTex, depth, D = 20, fov = 44, A = 10, gamma = 1 }) {
   const H = 2 * D * Math.tan(THREE.MathUtils.degToRad(fov / 2));
   const W = H * (REF.W / REF.H);
   const scaleOf = (d) => 1 / (1 + A * Math.pow(d, gamma));
@@ -40,6 +40,22 @@ export function createBackground(scene, { colorTex, occTex, depth, D = 20, fov =
   const worldAt = (x, y) => planePoint(x, y).multiplyScalar(scaleAt(x, y));
   // world height of something that spans `px` reference pixels when standing at (x, y)
   const worldHeightFor = (px, x, y) => (px / REF.H) * H * scaleAt(x, y);
+
+  // ground under the path, as a function of image row (sampled along the trail):
+  // characters stand on this, not on whatever the painting shows at their feet (e.g. a bush)
+  const GROUND = [[0, 0.06], [300, 0.088], [380, 0.106], [420, 0.128], [480, 0.133], [560, 0.153],
+    [600, 0.157], [650, 0.167], [720, 0.189], [850, 0.275], [880, 0.287], [941, 0.33], [1100, 0.45]];
+  const groundDepth = (y) => {
+    for (let i = 1; i < GROUND.length; i++) {
+      if (y <= GROUND[i][0]) {
+        const [y0, d0] = GROUND[i - 1], [y1, d1] = GROUND[i];
+        return d0 + (d1 - d0) * ((y - y0) / (y1 - y0));
+      }
+    }
+    return GROUND[GROUND.length - 1][1];
+  };
+  const groundAt = (x, y) => planePoint(x, y).multiplyScalar(scaleOf(groundDepth(y)));
+  const pxWorldAtGround = (y) => (H / REF.H) * scaleOf(groundDepth(y));
 
   const makeMesh = (tex, inset) => {
     const geo = new THREE.PlaneGeometry(W, H, 320, 180);
@@ -64,5 +80,5 @@ export function createBackground(scene, { colorTex, occTex, depth, D = 20, fov =
   occ.renderOrder = 20;
   group.add(bg, occ);
   scene.add(group);
-  return { group, occluder: occ, worldAt, scaleAt, worldHeightFor, D, W, H };
+  return { group, occluder: occ, worldAt, scaleAt, worldHeightFor, groundAt, pxWorldAtGround, D, W, H };
 }
