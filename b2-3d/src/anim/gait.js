@@ -68,6 +68,31 @@ export function quadGallop(phase, { stride, lift = 0.12 }) {
     FL: leg(0.45, QUAD.front, QUAD.frontHeight, 1),
     FR: leg(0.55, QUAD.front, QUAD.frontHeight, 1),
     head: { pitch: -0.7 * flex, rotY: 0 },
-    tail: [0, 1, 2, 3, 4, 5].map((i) => 0.28 * Math.sin(TAU * (phase - i * 0.07)) + (i === 0 ? 0.5 : 0.08)),
+    tail: [0, 1, 2, 3, 4, 5].map((i) => 0.22 * Math.sin(TAU * (phase - i * 0.07)) + [0.35, 0.15, 0.05, -0.1, -0.2, -0.25][i]),
+  };
+}
+
+// neutral standing pose with the same shape as bipedRun's output
+export function bipedStand() {
+  const ik = legIK(0, BIPED.hipHeight, BIPED.thigh, BIPED.shin, -1);
+  const leg = { stance: true, footFwd: 0, footUp: 0, hip: ik.hip, knee: ik.knee, ankle: -(ik.hip + ik.knee) };
+  return {
+    hip: { y: 0, rotY: 0, rotZ: 0, pitch: 0 }, L: { ...leg }, R: { ...leg },
+    armL: { sh: 0.45, el: -1.35 }, armR: { sh: 0.05, el: -0.25 },
+    chest: { rotY: 0, pitch: 0 }, head: { rotY: 0, pitch: 0 },
+  };
+}
+
+// tiger standing pose with the same shape as quadGallop's output
+export function quadStand() {
+  const leg = ([l1, l2], h, bend) => {
+    const ik = legIK(0, h, l1, l2, bend);
+    return { stance: true, footFwd: 0, footUp: 0, upper: ik.hip, lower: ik.knee, paw: -(ik.hip + ik.knee) * 0.6 };
+  };
+  return {
+    body: { y: 0, pitch: 0 }, spine: [0, 0, 0],
+    HL: leg(QUAD.hind, QUAD.hindHeight, -1), HR: leg(QUAD.hind, QUAD.hindHeight, -1),
+    FL: leg(QUAD.front, QUAD.frontHeight, 1), FR: leg(QUAD.front, QUAD.frontHeight, 1),
+    head: { pitch: 0, rotY: 0 }, tail: [0.6, 0.35, 0.2, -0.25, -0.45, -0.5],
   };
 }

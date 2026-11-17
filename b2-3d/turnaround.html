@@ -1,0 +1,46 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<script type="importmap">{ "imports": { "three": "./lib/three.module.js" } }</script>
+<style>html,body{margin:0;background:#222}canvas{display:block}</style></head>
+<body><canvas id="c" width="1600" height="600"></canvas>
+<script type="module">
+import * as THREE from "three";
+import { createGrandma } from "./src/grandma.js";
+import { bipedRun, bipedStand } from "./src/anim/gait.js";
+const q = new URLSearchParams(location.search);
+const who = q.get("who") ?? "grandma", pose = q.get("pose") ?? "stand", phase = +(q.get("phase") ?? 0.2);
+const r = new THREE.WebGLRenderer({ canvas: document.getElementById("c"), antialias: true, preserveDrawingBuffer: true });
+r.setPixelRatio(1); r.setSize(1600, 600, false); r.outputColorSpace = THREE.SRGBColorSpace;
+r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; r.setScissorTest(true);
+const scene = new THREE.Scene(); scene.background = new THREE.Color("#3a2a24");
+scene.add(new THREE.HemisphereLight("#cfe0ff", "#6b4a32", 1.1));
+const key = new THREE.DirectionalLight("#ffd2a1", 2.6); key.position.set(2, 3, 2.5); key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -1, right: 1, top: 1.5, bottom: -0.2 });
+scene.add(key);
+const rim = new THREE.DirectionalLight("#ffe6c8", 1.2); rim.position.set(-2, 2, -2.5); scene.add(rim);
+const ground = new THREE.Mesh(new THREE.CircleGeometry(1.2, 48), new THREE.MeshStandardMaterial({ color: "#5b4636", roughness: 1 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+let ch, height = 1.1;
+if (who === "grandma") {
+  ch = createGrandma();
+  const p = pose === "run" ? bipedRun(phase, { stride: 0.7 }) : bipedStand();
+  ch.setPose(p);
+  ch.setFace({ brow: pose === "run" ? 1 : 0.2, lid: 0, jaw: pose === "run" ? 0.8 : 0.1, eyeX: 0, eyeY: 0 });
+  ch.setSecondary(0.3, p, pose === "run" ? 1 : 0);
+} else {
+  const { createTiger } = await import("./src/tiger.js");
+  const { quadGallop, quadStand } = await import("./src/anim/gait.js");
+  ch = createTiger({ shells: +(q.get("shells") ?? 8) });
+  const p = pose === "run" ? quadGallop(phase, { stride: 2.0 }) : quadStand();
+  ch.setPose(p); ch.setFace({ brow: 0.6, lid: 0, jaw: pose === "run" ? 0.6 : 0.05, eyeX: 0, eyeY: 0 }); ch.update?.(0.3);
+  height = 1.0;
+}
+scene.add(ch.root);
+const cam = new THREE.PerspectiveCamera(30, 400 / 600, 0.1, 20);
+[0, 45, 90, 180].forEach((deg, i) => {
+  const a = THREE.MathUtils.degToRad(deg), d = who === "grandma" ? 2.6 : 5.2;
+  cam.position.set(Math.sin(a) * d, height * 0.55, Math.cos(a) * d); cam.lookAt(0, height * 0.45, who === "grandma" ? 0 : 0.1);
+  r.setViewport(i * 400, 0, 400, 600); r.setScissor(i * 400, 0, 400, 600); r.render(scene, cam);
+});
+window.__ready = true;
+</script></body></html>
