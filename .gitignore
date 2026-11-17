@@ -5,3 +5,4 @@ node_modules/
 renders/preview*/
 *.tmp
 __pycache__/
+.superpowers/

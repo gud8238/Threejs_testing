@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 첨부 이미지 에셋으로 10초 1080p30 호랑이 추격 영상을 Three.js(2.5D) + HyperFrames로 렌더하고 오디오를 믹싱해 최종 MP4와 평가 기록을 만든다.
+**Goal:** 첨부 이미지 에셋으로 10초 720p30 호랑이 추격 영상을 Three.js(2.5D) + HyperFrames로 렌더하고 오디오를 믹싱해 최종 MP4와 평가 기록을 만든다.
 
 **Architecture:** Python 전처리(rembg 누끼, Depth-Anything 깊이맵) → Gemini TTS/Lyria + ffmpeg 효과음 → `timing.json` 하나가 화면·소리 타이밍의 단일 원천 → HyperFrames 컴포지션 안 Three.js 캔버스를 `hf-seek`에서 GSAP 타임라인 seek 후 렌더 → ffmpeg 믹싱·합본.
 
@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- 출력: 1920×1080, 30fps, 10.0s(±1s), H.264 + AAC
+- 출력: 1280×720 (사용자 변경), 30fps, 10.0s(±1s), H.264 + AAC
 - 모든 프레임은 시간 t만의 함수: `requestAnimationFrame`/`Date.now`/시드 없는 `Math.random` 금지, 랜덤은 mulberry32 시드
 - API 키는 `request_credential`(호스트 `generativelanguage.googleapis.com`, 헤더 `x-goog-api-key`)로만. 스크립트는 더미 값 `PROXY_INJECTED` 전송. 키를 파일·로그·커밋에 남기지 않음
 - 커밋 전 `git grep -n "AIza"`가 설계서 한 줄 외 0건
@@ -127,14 +127,14 @@
 
 - [ ] **Step 1: 테스트**: 길이 = duration ±1프레임, 통합 -14 LUFS ±1, true peak ≤ -1 dBTP, freeze+0.05s 이후 RMS < -50 dBFS (impact 꼬리 제외 0.6s 후)
 - [ ] **Step 2:** ffmpeg filter_complex (adelay 배치, 대사 구간 BGM sidechaincompress, BGM freeze에서 하드컷, loudnorm 2-pass) → PASS
-- [ ] **Step 3: 검수 ④** 720p 미리보기 + 믹스 합본 전송 → 커밋
+- [ ] **Step 3: 검수 ④** 720p 미리보기(=최종 해상도) + 믹스 합본 전송 → 커밋
 
 ### Task 8: 최종 렌더 + 평가 기록 (검수 ⑤)
 
 **Files:**
-- Create: `renders/tiger_chase_A_1080p.mp4`, `docs/evaluation-A.md`
+- Create: `renders/tiger_chase_A_720p.mp4`, `docs/evaluation-A.md`
 
-- [ ] **Step 1:** `npx hyperframes render` 1080p30 (렌더 시간 측정) → ffmpeg로 mix.wav 합본(`-c:v copy -c:a aac -b:a 192k -shortest`)
-- [ ] **Step 2: 검증**: ffprobe 1920×1080, 30fps, 300±30프레임, 오디오 스트림 존재; `npx hyperframes audio renders/...mp4 --json` 라우드니스 범위
+- [ ] **Step 1:** `npx hyperframes render` 720p30 (렌더 시간 측정) → ffmpeg로 mix.wav 합본(`-c:v copy -c:a aac -b:a 192k -shortest`)
+- [ ] **Step 2: 검증**: ffprobe 1280×720, 30fps, 300±30프레임, 오디오 스트림 존재; `npx hyperframes audio renders/...mp4 --json` 라우드니스 범위
 - [ ] **Step 3:** `docs/evaluation-A.md` — 렌더 시간(프레임당/전체), 단계별 소요, 잘된 점, 한계(판 느낌·립싱크·각도), B2에서 볼 점
 - [ ] **Step 4:** `git grep AIza` 검사 → 커밋·푸시 → **검수 ⑤** 최종본 전송, 키 시크릿 삭제 안내
