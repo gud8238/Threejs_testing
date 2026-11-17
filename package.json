@@ -1,0 +1,28 @@
+{
+  "name": "threejs_testing",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gud8238/Threejs_testing.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gud8238/Threejs_testing/issues"
+  },
+  "homepage": "https://github.com/gud8238/Threejs_testing#readme",
+  "dependencies": {
+    "gsap": "^3.15.1",
+    "hyperframes": "^0.9.61",
+    "three": "^0.187.0"
+  }
+}
