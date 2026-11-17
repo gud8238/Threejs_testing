@@ -9,11 +9,14 @@ ENV = dict(os.environ, HYPERFRAMES_NO_TELEMETRY="1",
 args = sys.argv[1:]
 out = args.pop(0)
 w = 640
+project = "a-25d"
+if "--project" in args:
+    i = args.index("--project"); project = args[i + 1]; del args[i:i + 2]
 if "--w" in args:
     i = args.index("--w"); w = int(args[i + 1]); del args[i:i + 2]
 times = args
 d = Path(tempfile.mkdtemp())
-subprocess.run(["npx", "hyperframes", "snapshot", str(ROOT / "a-25d"), "--at", ",".join(times), "--no-end",
+subprocess.run(["npx", "hyperframes", "snapshot", str(ROOT / project), "--at", ",".join(times), "--no-end",
                 "-o", str(d), "--timeout", "170000", "--no-browser-gpu"], env=ENV, check=True, capture_output=True)
 pngs = sorted(d.glob("*.png"))
 cols = 2 if len(pngs) > 1 else 1

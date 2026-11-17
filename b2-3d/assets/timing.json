@@ -1,0 +1,19 @@
+{
+ "draft": true,
+ "duration": 10.0,
+ "shots": [
+  {"id": "S1", "start": 0.0, "end": 1.5},
+  {"id": "S2", "start": 1.5, "end": 3.5},
+  {"id": "S3", "start": 3.5, "end": 6.0},
+  {"id": "S4", "start": 6.0, "end": 8.0},
+  {"id": "S5", "start": 8.0, "end": 10.0}
+ ],
+ "freeze": 9.3,
+ "black": 9.7,
+ "cues": [
+  {"id": "v1", "file": "v1.wav", "t": 1.7, "gain_db": 0},
+  {"id": "v2", "file": "v2.wav", "t": 3.8, "gain_db": 0},
+  {"id": "v3", "file": "v3.wav", "t": 6.2, "gain_db": 0},
+  {"id": "v4", "file": "v4.wav", "t": 8.2, "gain_db": 0}
+ ]
+}

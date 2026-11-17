@@ -8,7 +8,7 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
-PROJECT = ROOT / "a-25d"
+PROJECT = ROOT / os.environ.get("HF_PROJECT", "a-25d")  # HF_PROJECT=b2-3d runs the same checks on B2
 ENV = dict(os.environ, HYPERFRAMES_NO_TELEMETRY="1",
            HYPERFRAMES_BROWSER_PATH="/opt/pw-browsers/chromium-1243/chrome-linux64/chrome")
 _cache = {}

@@ -52,8 +52,8 @@ export function bipedRun(phase, { stride, lift = 0.07, bob = 0.022 }) {
 
 export function quadGallop(phase, { stride, lift = 0.12 }) {
   const duty = 0.25;
-  const flex = 0.22 * Math.sin(TAU * (phase - 0.05));
-  const bodyY = -0.035 * Math.cos(TAU * (phase - 0.25));
+  const flex = 0.14 * Math.sin(TAU * (phase - 0.05));
+  const bodyY = -0.04 - 0.03 * Math.cos(TAU * (phase - 0.25));
   const leg = (off, [l1, l2], h, bend) => {
     const f = footTrack(frac(phase + off), duty, stride, lift);
     const ik = legIK(f.footFwd, h + bodyY - f.footUp, l1, l2, bend);
