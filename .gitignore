@@ -1,0 +1,7 @@
+.env*
+*.key
+node_modules/
+.hyperframes/
+renders/preview*/
+*.tmp
+__pycache__/
